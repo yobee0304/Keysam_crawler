@@ -1,44 +1,64 @@
 import datetime
 import requests
+import os
+from pandas import DataFrame
 from bs4 import BeautifulSoup
 
-# 서버로부터 받아야 하는 파라미터
-# sid
-# webpage
-# keyword
 def collect_article():
 
-    # 임시 테스트용
-    # url = "https://careers.kakao.com/jobs"
-    url = "https://recruit.webtoonscorp.com/webtoon/ko/job/list?classNm=developer"
-    baseUrl = "https://" + url.split("/")[2]
+    # API 1번 호출
+    response = requests.get('http://localhost:8080/getWebpage')
+    result_dict = {'sid':[], 'url':[]}
 
-    #TODO 베이스 URL 접속 후 status 확인 -> 200일 때만 진행
+    for json_data in response.json():
+        # API 호출을 통해 받은 파라미터 값들
+        sid = json_data["sid"]
+        keyword = json_data["keyword"]
+        url = json_data["webpage"]
 
-    # 임시 키워드
-    keyword = "서버"
+        baseUrl = "https://" + url.split("/")[2]
 
-    req = requests.get(url)
-    html = req.text
+        req = requests.get(url)
+        html = req.text
 
-    soup = BeautifulSoup(html, 'html.parser')
+        soup = BeautifulSoup(html, 'html.parser')
 
-    # 하이퍼텍스트가 포함된 html 검색
-    article_url = soup.select(
-        'a'
-    )
+        # 하이퍼텍스트가 포함된 html 검색
+        article_url = soup.select(
+            'a'
+        )
 
-    # 키워드가 포함된 게시물의 url 리스트
-    #TODO 게시물 url status 확인해서 되는 것만 추가
-    article_url_list = []
+        # 키워드가 포함된 게시물의 url 리스트
+        article_url_list = []
 
-    for a in article_url:
-        # 키워드가 존재하는 하이퍼텍스트
-        # url에는 키워드 포함 X
-        if keyword in str(a) and keyword not in a['href']:
-            article_url_list.append(a['href'])
+        for a in article_url:
+            # 키워드가 존재하는 하이퍼텍스트
+            # url에는 키워드 포함 X
+            if keyword in str(a) and keyword not in a['href']:
+                article_url_list.append(a['href'])
 
-    #TODO Article 테이블에 맞게 csv파일 생성
+        #TODO 게시불 게시된 시간 있으면 가져오기
+        for url in article_url_list:
+            result_dict["sid"].append(sid)
+            result_dict["url"].append(baseUrl+url)
+
+    # Article 테이블에 맞게 csv파일 생성
+    result_df = DataFrame(result_dict)
+    print(result_df)
+    result_df.to_csv(os.getcwd()+"/result.csv",
+                     sep=',',
+                     na_rep='NaN',
+                     columns=['sid', 'url'],
+                     index=False)
+
+    # API 2번 호출
+    # 보내고자하는 파일을 'rb'(바이너리 리드)방식 열고
+    files = open(os.getcwd()+'/result.csv', 'rb')
+    upload = {'csv_file': files}
+    # String 포맷
+    obj = {"temperature": '23.5', "humidity": '54.5'}
+
+    requests.post('http://localhost:8080/postArticle', files=upload, data=obj)
 
 
 if __name__ == "__main__":
