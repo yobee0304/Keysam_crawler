@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 def collect_article():
 
     # API 1번 호출
-    response = requests.get('http://localhost:8080/getWebpage')
+    response = requests.get('http://localhost:8080/spGetWebpage')
     result_dict = {'sid':[], 'url':[]}
 
     for json_data in response.json():
@@ -58,7 +58,7 @@ def collect_article():
     # String 포맷
     obj = {"temperature": '23.5', "humidity": '54.5'}
 
-    requests.post('http://localhost:8080/postArticle', files=upload, data=obj)
+    requests.post('http://localhost:8080/spInsertArticle', files=upload, data=obj)
 
 
 if __name__ == "__main__":
