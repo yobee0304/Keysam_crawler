@@ -15,6 +15,7 @@ def collect_article():
         sid = json_data["sid"]
         keyword = json_data["keyword"]
         url = json_data["webpage"]
+        classid = json_data["classid"]
 
         baseUrl = "https://" + url.split("/")[2]
 
@@ -25,7 +26,7 @@ def collect_article():
 
         # 하이퍼텍스트가 포함된 html 검색
         article_url = soup.select(
-            'a'
+            'div.' + classid + ' > a'
         )
 
         # 키워드가 포함된 게시물의 url 리스트
@@ -34,7 +35,10 @@ def collect_article():
         for a in article_url:
             # 키워드가 존재하는 하이퍼텍스트
             # url에는 키워드 포함 X
-            if keyword in str(a) and keyword not in a['href']:
+            # if keyword in str(a) and keyword not in a['href']:
+
+            # For test
+            if keyword in str(a):
                 article_url_list.append(a['href'])
 
         #TODO 게시불 게시된 시간 있으면 가져오기
@@ -44,7 +48,6 @@ def collect_article():
 
     # Article 테이블에 맞게 csv파일 생성
     result_df = DataFrame(result_dict)
-    print(result_df)
     result_df.to_csv(os.getcwd()+"/result.csv",
                      sep=',',
                      na_rep='NaN',
