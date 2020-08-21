@@ -8,10 +8,11 @@ def collect_article():
 
     # API 1번 호출
     response = requests.get('http://localhost:8080/spGetWebpage')
-    result_dict = {'sid':[], 'url':[]}
+    result_dict = {'cid':[], 'sid':[], 'url':[]}
 
     for json_data in response.json():
         # API 호출을 통해 받은 파라미터 값들
+        cid = json_data["cid"]
         sid = json_data["sid"]
         keyword = json_data["keyword"]
         url = json_data["webpage"]
@@ -43,6 +44,7 @@ def collect_article():
 
         #TODO 게시불 게시된 시간 있으면 가져오기
         for url in article_url_list:
+            result_dict["cid"].append(cid)
             result_dict["sid"].append(sid)
             result_dict["url"].append(baseUrl+url)
 
@@ -51,7 +53,7 @@ def collect_article():
     result_df.to_csv(os.getcwd()+"/result.csv",
                      sep=',',
                      na_rep='NaN',
-                     columns=['sid', 'url'],
+                     columns=['cid', 'sid', 'url'],
                      index=False)
 
     # API 2번 호출
